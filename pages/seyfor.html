@@ -456,6 +456,10 @@
       border: 1px solid var(--border-light);
       border-radius: var(--radius);
       overflow: hidden;
+      margin-bottom: 2rem;
+    }
+    .margin-bot{
+      margin-bottom: 3rem;
     }
     .comp-showcase-header {
       background: var(--bg-alt);
@@ -1562,7 +1566,7 @@
       <span class="case-tag">Dev Collaboration</span>
       <span class="case-tag">UX Design</span>
     </div>
-    <h1>Seyfor <span style="font-style:italic;color:var(--fg-muted);">2022 — Present</span></h1>
+    <h1>Seyfor <span style="font-style:italic;color:var(--fg-muted);">2024 — Present</span></h1>
     <p class="case-hero-sub">Seyfor je jednou z největších českých softwarových společností zaměřených na ERP, CRM, HR systémy a cloudová řešení. Do firmy jsem nastoupil jako UX/UI designér a pracoval především na produktu Vema – HR platformě, kterou firmy využívají pro správu zaměstnanců, mezd a interních procesů.</p>
 
     <div class="case-stats">
@@ -1590,7 +1594,7 @@
       <div class="role-card">
         <span class="role-card-icon">🎯</span>
         <h4>Zodpovědnosti</h4>
-        <p>Správa UI komponent, design tokenů a dohled nad kvalitou výstupů, za naše oddělení, před jejich předáním vývojářům.</p>
+        <p>Vedení vývoje a správy design systému – komponenty, tokeny, dohled nad implementací a jejich využití při návrhu produktových rozhraní.</p>
       </div>
       <div class="role-card">
         <span class="role-card-icon">👨‍👨‍👦‍👦</span>
@@ -1679,6 +1683,11 @@
       <div class="comp-showcase-body">
         <img src="../img/seyfor-designsystem.png" alt="Seyfor design system" style="width:100%;border-radius:var(--radius);object-fit:cover;" />
       </div>
+    </div>
+
+    <div class="impact-note margin-bot">
+      <strong data-i18n="component_showcase_note_title">Flexibilita vs. konzistence:</strong>
+      <span data-i18n="component_showcase_note_text">Při správě knihovny jsem hledal rovnováhu mezi jednotným designem a potřebami jednotlivých modulů. Místo vytváření nových komponent jsem upřednostňoval rozšiřování stávajících. Zároveň jsem dohlížel na jejich implementaci podle definovaných pravidel a konzistentní začlenění do designových knihoven.</span>
     </div>
 
     <!-- Two images: Figma view + all components overview -->
@@ -2162,7 +2171,7 @@ const seyforTranslations = {
     role_work_title: 'Work type',
     role_work_desc: 'Design system, component library, design tokens, documentation, product design, and UI implementation.',
     role_resp_title: 'Responsibilities',
-    role_resp_desc: 'Responsible for UI components, design tokens, and the technical quality of design deliverables before handoff to developers.',
+    role_resp_desc: 'Led design system development and maintenance – components, tokens, implementation oversight, and their application in product UI design.',
     role_collab_title: 'Collaboration',
     role_collab_desc: 'Collaboration with web, application, and system developers, business analysts, and testers across multiple product teams.',
     context_title: 'Context and challenge',
@@ -2194,6 +2203,8 @@ const seyforTranslations = {
     cl_handoff_label: 'States & variants',
     cl_handoff_text: 'Every component was built around clearly defined spacing, sizing, and alignment rules. All variants, states, properties, and behavioral specifications were mapped and documented before becoming part of the library.',
     components_showcase_header: 'Components — example of variants and states',
+    component_showcase_note_title: 'Component Standardization:',
+    component_showcase_note_text: 'When managing the component library, I balanced design consistency with the needs of individual product modules. Rather than creating new components for every scenario, I prioritized extending existing ones. I also oversaw their implementation to ensure they followed established guidelines and were consistently integrated into the design libraries.',
     cl_figma_title: 'Components in Figma',
     cl_figma_text: 'Components were built to match the implemented product one-to-one. Every variant, state, and property available in Figma had a corresponding implementation in the application, making the library a reliable source of truth for both designers and developers.',
     cl_ph_all_label: 'All components — 3 themes (light, dark, brand)',
@@ -2293,7 +2304,7 @@ const seyforTranslations = {
     toc_ux_apps: 'UX Aplikace',
     summarize_title: 'Seyfor — tldr',
     summarize_text: 'Vedl jsem vývoj design systému pro jednu z největších českých softwarových společností. Vybudoval jsem komponentní knihovnu, zavedl design tokens, napsal dokumentaci a nastavil procesy spolupráce s vývojáři napříč 10+ produktovými týmy. Zároveň jsem navrhoval nové aplikační moduly od začátku.',
-    hero_epoch: '2022 — současnost',
+    hero_epoch: '2024 — současnost',
     hero_title: 'Seyfor',
     hero_sub: 'Seyfor je jednou z největších českých softwarových společností zaměřených na ERP, CRM, HR systémy a cloudová řešení. Do firmy jsem nastoupil jako UX/UI designér a pracoval především na produktu Vema – HR platformě, kterou firmy využívají pro správu zaměstnanců, mezd a interních procesů.',
     stat1_num: '10+',
@@ -2302,15 +2313,13 @@ const seyforTranslations = {
     stat2_label: 'komponent v knihovně',
     stat3_num: '2+',
     stat3_label: 'roky práce',
-    stat4_num: '2×',
-    stat4_label: 'rychlejší onboarding',
     screenshot_label: '[ Screenshot — design system overview / Figma component library ]',
     role_title: 'Moje role',
     role_intro: 'Připojil jsem se ke čtyřčlennému týmu designérů, který rozvíjel design systém vytvořený teprve několik let před mým nástupem. Mým prvním úkolem bylo rychle porozumět rozsáhlému a komplexnímu produktovému ekosystému. Následně jsem se podílel na rozvoji design systému, zlepšování architektury komponent a na jeho konzistentním využívání napříč novými aplikacemi.',
     role_work_title: 'Náplň práce',
     role_work_desc: 'Design systém, knihovna komponent, design tokeny, dokumentace, návrh produktů a UX handoff.',
     role_resp_title: 'Zodpovědnosti',
-    role_resp_desc: 'Správa UI komponent, design tokenů a dohled nad kvalitou výstupů, za naše oddělení, před jejich předáním vývojářům.',
+    role_resp_desc: 'Vedení vývoje a správy design systému – komponenty, tokeny, dohled nad implementací a jejich využití při návrhu produktových rozhraní.',
     role_collab_title: 'Spolupráce',
     role_collab_desc: 'Úzká spolupráce s webovými, aplikačními i systémovými vývojáři, business analytiky a dalšími designéry napříč celou společností.',
     context_title: 'Kontext a výzva',
@@ -2334,13 +2343,15 @@ const seyforTranslations = {
     ds_themes: '5',
     ds_themes_label: 'témat / brandů',
     cl_title: 'Komponenty, Patterny & Šablony',
-    cl_intro: 'Design systém je tvořena komponentami, tokeny, patterny a šablonami. Společně představují hlavní stavební bloky pro tvorbu uživatelských rozhraní a zároveň snižují množství opakované práce při návrhu i implementaci.',
+    cl_intro: 'Design systém je tvořen komponentami, tokeny, patterny a šablonami. Společně představují hlavní stavební bloky pro tvorbu uživatelských rozhraní a zároveň snižují množství opakované práce při návrhu i implementaci.',
     cl_process_title: 'Jak jsem vytvářel komponenty',
     cl_process_text: 'Každá komponenta prošla definovaným procesem: audit existujícího UI → analýza → definice variant a stavů → finalizace návrhu → implementace ve figmě → dokumentace → handoff review. Do produkce se nedostala žádná komponenta, která by tímto procesem neprošla.',
     cl_process_doc_label: 'Dokumentace procesu',
     cl_handoff_label: 'States & variants',
     cl_handoff_text: 'Každá komponenta byla postavena na přesně definovaných pravidlech - mezery, velikosti, zarovnání a další specifikace. Všechny varianty, stavy a interakce byly zdokumentovány ještě před zařazením do knihovny.',
     components_showcase_header: 'Komponenty — ukázka variant a stavů',
+    component_showcase_note_title: 'Standardizace komponent:',
+    component_showcase_note_text: 'Při správě knihovny jsem hledal rovnováhu mezi jednotným designem a potřebami jednotlivých modulů. Místo vytváření nových komponent jsem upřednostňoval rozšiřování stávajících. Zároveň jsem dohlížel na jejich implementaci podle definovaných pravidel a konzistentní začlenění do designových knihoven.',
     cl_figma_title: 'Komponenty ve Figmě',
     cl_figma_text: 'Komponenty byly vytvářeny tak, aby co nejvěrněji odpovídaly finální implementaci v produktu. Každá varianta, stav i vlastnost dostupná ve Figmě měla svůj ekvivalent v aplikaci, díky čemuž byla knihovna spolehlivým zdrojem pro designéry i vývojáře.',
     cl_ph_all_label: 'Všechny komponenty — 3 témata (světlé, tmavé, brand)',
