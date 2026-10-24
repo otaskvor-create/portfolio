@@ -321,9 +321,15 @@
       if (saved && Date.now() - saved.t < 8000 &&
           saved.x >= 0 && saved.y >= 0 && saved.x <= innerWidth && saved.y <= innerHeight) {
         placed = true;
+        // Appear instantly at the old position (no fade / pop-in) so there is
+        // no moment without a cursor after the page change.
+        cursorEl.classList.add('is-restoring');
         place(saved.x, saved.y, true);
         queueDetect();
         show();
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () { cursorEl.classList.remove('is-restoring'); });
+        });
       }
     } catch (e) {}
   }

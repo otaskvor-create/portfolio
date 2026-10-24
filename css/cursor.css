@@ -1,21 +1,20 @@
 /* ============================================
    ADAPTIVE CURSOR  (behaviour lives in js/cursor.js)
 
-   Solid-colour shape with a thin light outline (no mix-blend-mode: it made
-   Chrome re-blend the whole page every frame). The outline keeps the
-   cursor visible on dark images, the lightbox and the Seyfor previews.
-   Change the colour in one place: --cursor-color.
+   White shape + mix-blend-mode: difference means the cursor inverts
+   whatever is under it: near-black on the warm paper background,
+   light on dark images, the lightbox and the Seyfor theme previews.
+   One rule works across every theme, no per-theme colours needed.
    ============================================ */
 .site-cursor {
-  --cursor-color: #0f0f0f;
-  --cursor-outline: rgba(255, 255, 255, 0.85);
   position: fixed;
   top: 0;
   left: 0;
   z-index: 2147483647;
   pointer-events: none;
   user-select: none;
-  color: #fff;                      /* glyph colour inside the shape */
+  color: #000;                      /* glyph colour: a cut-out in the white shape */
+  mix-blend-mode: difference;
   opacity: 0;
   transition: opacity var(--t-med, 0.28s) ease;
   will-change: transform;
@@ -32,8 +31,7 @@
   height: 12px;
   border: 1.5px solid transparent;
   border-radius: 6px;
-  background: var(--cursor-color);
-  box-shadow: 0 0 0 1px var(--cursor-outline);
+  background: #fff;
   transform: translate(-50%, -50%) scale(var(--s));
   transition:
     width 0.32s var(--ease, cubic-bezier(0.16, 1, 0.3, 1)),
@@ -56,8 +54,8 @@
   width: 40px;
   height: 40px;
   border-radius: 22px;
-  border-color: var(--cursor-color);
-  background: color-mix(in srgb, var(--cursor-color) 14%, transparent);
+  border-color: #fff;
+  background: rgba(255, 255, 255, 0.14);
 }
 
 /* ---------- Text: caret that matches the hovered text size ---------- */
@@ -113,6 +111,28 @@ html.has-site-cursor *,
 html.has-site-cursor *::before,
 html.has-site-cursor *::after {
   cursor: none !important;
+}
+
+/* ---------- No native cursor flash between pages ----------
+   html.has-site-cursor is added by JS, so a freshly loaded page briefly
+   showed the native arrow next to the restored custom cursor. On a mouse
+   device the native cursor is therefore hidden from the very first style
+   calculation, no JS needed. The custom cursor shows up on the first
+   mouse move (or immediately after a page-to-page navigation). */
+@media screen and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  html,
+  html *,
+  html *::before,
+  html *::after {
+    cursor: none !important;
+  }
+}
+
+/* Right after a page change the custom cursor appears instantly at the
+   restored position instead of fading / popping in. */
+.site-cursor.is-restoring,
+.site-cursor.is-restoring .site-cursor__shape {
+  transition: none !important;
 }
 
 /* ---------- Safety nets (JS also checks these) ---------- */
