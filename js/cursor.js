@@ -242,16 +242,25 @@
     current = { state: next.state, caret: next.caret || 0 };
   }
 
+  // The hit-test (elementFromPoint + caret/range lookups) forces layout, so it
+  // is throttled. The cursor position itself is NOT throttled: it is written
+  // straight from the pointermove event.
+  var DETECT_INTERVAL = 60;   // ms
   var detectQueued = false;
+  var lastDetect = 0;
+  function runDetect() {
+    detectQueued = false;
+    if (!enabled || !placed) return;
+    lastDetect = performance.now();
+    var el = doc.elementFromPoint(last.x, last.y);
+    applyState(resolve(last.x, last.y, el));
+  }
   function queueDetect() {
     if (detectQueued) return;
     detectQueued = true;
-    requestAnimationFrame(function () {
-      detectQueued = false;
-      if (!enabled || !placed) return;
-      var el = doc.elementFromPoint(last.x, last.y);
-      applyState(resolve(last.x, last.y, el));
-    });
+    var wait = DETECT_INTERVAL - (performance.now() - lastDetect);
+    if (wait > 0) setTimeout(function () { requestAnimationFrame(runDetect); }, wait);
+    else requestAnimationFrame(runDetect);
   }
 
   // The portfolio reveals sections with a slide/fade animation, so whatever
