@@ -155,6 +155,72 @@ if (window.matchMedia('(hover: hover) and (pointer: fine) and (min-width: 901px)
   }, { passive: true });
 
   document.addEventListener('mouseleave', () => { gridMask.style.opacity = '0'; });
+
+  /* ---- Click: a soft pulse of the grid around the pointer ----
+     Deliberately calm: it stays inside the area the hover spot already shows
+     (no new region lights up, nothing travels outwards), the lines only get
+     a little stronger for a moment and relax again, so content that changes
+     under the pointer (expanding text, ...) is not competing for attention.
+     Same technique as the hover spot (lines locked to the page); position and
+     opacity are compositor-only, nothing runs while the mouse is idle. */
+  if (gridOverlay.animate && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const RR = 140;                    // pulse radius in px (hover spot: 150)
+    const RSIZE = RR * 2;
+    const RDUR = 520;                  // ms
+    const RALPHA = 0.1;               // extra line strength (adds to the hover spot's 0.07)
+    const POOL = 2;                    // quick repeated clicks can overlap
+    const disc = 'radial-gradient(circle closest-side,#000 0%,transparent 100%)';
+
+    const makeRipple = () => {
+      const el = document.createElement('div');
+      el.style.cssText = [
+        'position:absolute;top:0;left:0;width:' + RSIZE + 'px;height:' + RSIZE + 'px',
+        'overflow:hidden;opacity:0;pointer-events:none',
+        'will-change:transform,opacity',
+        '-webkit-mask-image:' + disc, 'mask-image:' + disc,
+        '-webkit-mask-repeat:no-repeat', 'mask-repeat:no-repeat',
+        '-webkit-mask-position:center', 'mask-position:center',
+      ].join(';');
+      const lines = document.createElement('div');
+      lines.style.cssText = [
+        'position:absolute;top:0;left:0;width:' + (RSIZE + GRID) + 'px;height:' + (RSIZE + GRID) + 'px',
+        'background-image:linear-gradient(rgba(15,15,15,' + RALPHA + ') 1px,transparent 1px),linear-gradient(90deg,rgba(15,15,15,' + RALPHA + ') 1px,transparent 1px)',
+        'background-size:' + GRID + 'px ' + GRID + 'px',
+        'will-change:transform',
+      ].join(';');
+      el.appendChild(lines);
+      gridOverlay.appendChild(el);
+      return { el, lines, anims: [] };
+    };
+
+    const ripples = [];
+    let rippleIdx = 0;
+
+    document.addEventListener('mousedown', e => {
+      if (e.button !== 0) return;
+      const r = ripples[rippleIdx] || (ripples[rippleIdx] = makeRipple());
+      rippleIdx = (rippleIdx + 1) % POOL;
+      r.anims.forEach(a => a.cancel());
+
+      const sx = Math.round(e.clientX - navW - RR);
+      const sy = Math.round(e.clientY - RR);
+      r.el.style.transform = 'translate3d(' + sx + 'px,' + sy + 'px,0)';
+      r.lines.style.transform = 'translate3d(' + (-mod(sx, GRID)) + 'px,' + (-mod(sy, GRID)) + 'px,0)';
+
+      r.anims = [
+        // the glow opens up slightly while it fades (no travelling edge)
+        r.el.animate(
+          [{ maskSize: '65% 65%', webkitMaskSize: '65% 65%' }, { maskSize: '100% 100%', webkitMaskSize: '100% 100%' }],
+          { duration: RDUR, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' }
+        ),
+        // quick rise at the click, long soft fall
+        r.el.animate(
+          [{ opacity: 0 }, { opacity: 1, offset: 0.14 }, { opacity: 0 }],
+          { duration: RDUR, easing: 'ease-out' }
+        ),
+      ];
+    }, { passive: true });
+  }
 }
 
 /* ============================================

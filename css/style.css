@@ -903,7 +903,7 @@ body.case-body-page { display: block; }
   gap: 0.35rem;
   margin-top: 0.6rem;
   padding: 0.22rem 0.65rem;
-  background: none;
+  background: #f5f4f0;
   border: 1px dashed var(--border-strong);
   border-radius: 999px;
   cursor: pointer;
@@ -1424,7 +1424,7 @@ section,
 .edu-subject-link {
   display: inline-block;
   padding: 0.35rem 0.75rem;
-  background-color: rgba(0, 0, 0, 0.03);
+  background-color: #EDECE8;
   border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 4px;
   font-size: 0.8rem;
@@ -1440,7 +1440,7 @@ section,
 
 .edu-subject-link:hover,
 .edu-subject-link:focus-visible {
-  background-color: rgba(0, 0, 0, 0.06);
+  background-color: #EDECE8;
   border-color: rgba(0, 0, 0, 0.15);
 }
 
