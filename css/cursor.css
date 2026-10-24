@@ -1,0 +1,119 @@
+/* ============================================
+   ADAPTIVE CURSOR  (behaviour lives in js/cursor.js)
+
+   White shape + mix-blend-mode: difference means the cursor inverts
+   whatever is under it: near-black on the warm paper background,
+   light on dark images, the lightbox and the Seyfor theme previews.
+   One rule works across every theme, no per-theme colours needed.
+   ============================================ */
+.site-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 2147483647;
+  pointer-events: none;
+  user-select: none;
+  color: #000;                      /* glyph colour: a cut-out in the white shape */
+  mix-blend-mode: difference;
+  opacity: 0;
+  transition: opacity var(--t-med, 0.28s) ease;
+  will-change: transform;
+}
+.site-cursor.is-visible { opacity: 1; }
+
+.site-cursor__shape {
+  --s: 1;
+  position: absolute;
+  top: 0;
+  left: 0;
+  box-sizing: border-box;
+  width: 12px;
+  height: 12px;
+  border: 1.5px solid transparent;
+  border-radius: 6px;
+  background: #fff;
+  transform: translate(-50%, -50%) scale(var(--s));
+  transition:
+    width 0.32s var(--ease, cubic-bezier(0.16, 1, 0.3, 1)),
+    height 0.32s var(--ease, cubic-bezier(0.16, 1, 0.3, 1)),
+    border-radius 0.32s var(--ease, cubic-bezier(0.16, 1, 0.3, 1)),
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    opacity 0.2s ease,
+    transform 0.2s var(--ease, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+/* Enters with a small pop instead of appearing abruptly */
+.site-cursor:not(.is-visible) .site-cursor__shape { --s: 0.4; }
+
+/* ---------- Pressed: small, quick feedback ---------- */
+.site-cursor.is-pressed .site-cursor__shape { --s: 0.78; }
+
+/* ---------- Pointer: links and buttons ---------- */
+.site-cursor[data-state="pointer"] .site-cursor__shape {
+  width: 40px;
+  height: 40px;
+  border-radius: 22px;
+  border-color: #fff;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+/* ---------- Text: caret that matches the hovered text size ---------- */
+.site-cursor[data-state="text"] .site-cursor__shape {
+  width: 3px;
+  height: var(--caret-h, 20px);
+  border-width: 0;
+  border-radius: 2px;
+}
+/* no shrinking while selecting text */
+.site-cursor[data-state="text"].is-pressed .site-cursor__shape { --s: 1; }
+
+/* ---------- Drag (comparison slider) ---------- */
+.site-cursor[data-state="drag"] .site-cursor__shape {
+  width: 60px;
+  height: 34px;
+  border-radius: 17px;
+}
+
+/* ---------- Zoom (image galleries / lightbox) ---------- */
+.site-cursor[data-state="zoom"] .site-cursor__shape {
+  width: 48px;
+  height: 48px;
+  border-radius: 24px;
+}
+
+/* ---------- Disabled ---------- */
+.site-cursor[data-state="disabled"] .site-cursor__shape { opacity: 0.35; }
+
+/* ---------- Hidden by data-cursor="hide" ---------- */
+.site-cursor[data-state="hide"] .site-cursor__shape { --s: 0; }
+
+/* ---------- Glyphs inside drag / zoom ---------- */
+.site-cursor__glyph {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.site-cursor[data-state="drag"] .site-cursor__glyph--drag,
+.site-cursor[data-state="zoom"] .site-cursor__glyph--zoom {
+  opacity: 1;
+  transition-delay: 0.1s;
+}
+
+/* ---------- Hide the native cursor only while ours is active ---------- */
+html.has-site-cursor,
+html.has-site-cursor *,
+html.has-site-cursor *::before,
+html.has-site-cursor *::after {
+  cursor: none !important;
+}
+
+/* ---------- Safety nets (JS also checks these) ---------- */
+@media (hover: none), (pointer: coarse), (prefers-reduced-motion: reduce), print {
+  .site-cursor { display: none !important; }
+}

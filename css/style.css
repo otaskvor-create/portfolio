@@ -1431,7 +1431,7 @@ section,
   color: var(--fg);
   text-decoration: none;
   transition: all 0.2s ease;
-  cursor: pointer;
+  cursor: text;
   outline: none;
   position: relative;
   font-family: inherit;
