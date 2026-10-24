@@ -153,6 +153,107 @@
     return 0;
   }
 
+  /* ---------- Light cursor over dark content ----------
+     No mix-blend-mode (too slow on older machines). Instead the cursor looks
+     at what is under it and switches between a dark and a light variant:
+       - <img>: the average brightness of the spot under the pointer, read
+         from a tiny 24x24 thumbnail that is computed once per image
+       - everything else: the first opaque background colour in the stack
+         of elements under the pointer (dark sections, the lightbox, ...)
+     Runs inside the throttled hit-test, so it costs nothing while moving.
+     Force it per element with data-cursor-theme="light" (= dark content,
+     light cursor) or data-cursor-theme="dark". */
+  var LIGHT_BELOW = 0.45;   // darker than this  -> light cursor
+  var DARK_ABOVE  = 0.55;   // brighter than this -> back to dark (hysteresis, no flicker)
+  var THUMB = 24;
+  var lumaCache = typeof WeakMap === 'function' ? new WeakMap() : null;
+  var thumbCanvas, thumbCtx;
+  var themeLight = false;
+
+  function buildLuma(img) {
+    var info = { src: '', grid: null, fit: 'fill', px: 0.5, py: 0.5 };
+    if (!img.complete || !img.naturalWidth) return info;      // not loaded yet, retry next time
+    info.src = img.currentSrc || img.src;
+    try {
+      if (!thumbCanvas) {
+        thumbCanvas = doc.createElement('canvas');
+        thumbCanvas.width = thumbCanvas.height = THUMB;
+        thumbCtx = thumbCanvas.getContext('2d', { willReadFrequently: true });
+      }
+      thumbCtx.clearRect(0, 0, THUMB, THUMB);
+      thumbCtx.drawImage(img, 0, 0, THUMB, THUMB);
+      var data = thumbCtx.getImageData(0, 0, THUMB, THUMB).data;
+      var grid = new Float32Array(THUMB * THUMB);
+      for (var i = 0; i < grid.length; i++) {
+        var o = i * 4;
+        grid[i] = data[o + 3] < 128 ? -1 :
+          (0.2126 * data[o] + 0.7152 * data[o + 1] + 0.0722 * data[o + 2]) / 255;
+      }
+      info.grid = grid;
+    } catch (e) { /* tainted canvas (cross-origin / file://): image is skipped */ }
+    var cs = getComputedStyle(img);
+    info.fit = cs.objectFit || 'fill';
+    var op = (cs.objectPosition || '50% 50%').split(' ');
+    info.px = op[0] && op[0].indexOf('%') > 0 ? parseFloat(op[0]) / 100 : 0.5;
+    info.py = op[1] && op[1].indexOf('%') > 0 ? parseFloat(op[1]) / 100 : 0.5;
+    return info;
+  }
+
+  // Brightness (0..1) of the image under the pointer, or -1 when unknown / transparent there.
+  function imageLumaAt(img, x, y) {
+    var info = lumaCache && lumaCache.get(img);
+    if (!info || info.src !== (img.currentSrc || img.src)) {
+      info = buildLuma(img);
+      if (lumaCache) lumaCache.set(img, info);
+    }
+    if (!info.grid) return -1;
+    var r = img.getBoundingClientRect();
+    if (!r.width || !r.height) return -1;
+    var nw = img.naturalWidth, nh = img.naturalHeight;
+    var dw = r.width, dh = r.height, ox = 0, oy = 0, s;
+    if (info.fit === 'cover') s = Math.max(r.width / nw, r.height / nh);
+    else if (info.fit === 'contain') s = Math.min(r.width / nw, r.height / nh);
+    else if (info.fit === 'none') s = 1;
+    else if (info.fit === 'scale-down') s = Math.min(1, r.width / nw, r.height / nh);
+    if (s) { dw = nw * s; dh = nh * s; ox = (r.width - dw) * info.px; oy = (r.height - dh) * info.py; }
+    var u = (x - r.left - ox) / dw, v = (y - r.top - oy) / dh;
+    if (u < 0 || u >= 1 || v < 0 || v >= 1) return -1;                // letterbox area
+    return info.grid[((v * THUMB) | 0) * THUMB + ((u * THUMB) | 0)];
+  }
+
+  // Brightness (0..1) of an opaque-ish computed background colour, or -1 when transparent.
+  function colorLuma(str) {
+    if (!str || str === 'transparent') return -1;
+    var isFn = str.indexOf('color(') === 0;
+    if (!isFn && str.indexOf('rgb') !== 0) return -1;
+    var n = str.match(/-?\d*\.?\d+/g);
+    if (!n || n.length < 3) return -1;
+    var a = n.length > 3 ? parseFloat(n[3]) : 1;
+    if (a < 0.5) return -1;
+    var k = isFn ? 1 : 255;
+    return (0.2126 * n[0] + 0.7152 * n[1] + 0.0722 * n[2]) / k;
+  }
+
+  function detectTheme(x, y) {
+    var stack = doc.elementsFromPoint ? doc.elementsFromPoint(x, y) : [doc.elementFromPoint(x, y)];
+    var luma = 1;                                   // nothing opaque found: the light paper page
+    for (var i = 0; i < stack.length; i++) {
+      var el = stack[i];
+      if (!el || el === cursorEl) continue;
+      var forced = el.getAttribute('data-cursor-theme');
+      if (forced === 'light') { luma = 0; break; }
+      if (forced === 'dark') { luma = 1; break; }
+      var l = el.tagName === 'IMG' ? imageLumaAt(el, x, y) : colorLuma(getComputedStyle(el).backgroundColor);
+      if (l >= 0) { luma = l; break; }
+    }
+    var light = themeLight ? luma <= DARK_ABOVE : luma < LIGHT_BELOW;
+    if (light !== themeLight) {
+      themeLight = light;
+      if (light) cursorEl.setAttribute('data-theme', 'light');
+      else cursorEl.removeAttribute('data-theme');
+    }
+  }
+
   /* ---------- State resolution ---------- */
   var VALID_OVERRIDES = { pointer: 1, text: 1, drag: 1, zoom: 1, disabled: 1, hide: 1, 'default': 1 };
 
@@ -254,6 +355,7 @@
     lastDetect = performance.now();
     var el = doc.elementFromPoint(last.x, last.y);
     applyState(resolve(last.x, last.y, el));
+    detectTheme(last.x, last.y);
   }
   function queueDetect() {
     if (detectQueued) return;
@@ -334,12 +436,25 @@
     } catch (e) {}
   }
 
+  // js/soft-nav.js swaps the page content without reloading the document.
+  // The cursor itself stays, but the page under it is new: re-read the
+  // cursor styles of the new page and re-check what is under the pointer.
+  function onSoftNavDone() {
+    buildMatchers();
+    cursorEl.classList.remove('is-pressed');
+    queueDetect();
+  }
+
   var listening = false;
   function listen(on) {
     if (on === listening) return;
     listening = on;
     var fn = on ? 'addEventListener' : 'removeEventListener';
     var passive = { passive: true };
+    // Tell js/soft-nav.js that these listeners belong to the cursor and must
+    // survive a page swap (it removes the listeners of the page scripts).
+    [onPointerMove, onPointerDown, onPointerUp, onLeave, onEnter, onScroll, onBlur, onPageHide, onSoftNavDone]
+      .forEach(function (f) { f.__softNavKeep = true; });
     doc[fn]('pointermove', onPointerMove, passive);
     doc[fn]('pointerdown', onPointerDown, passive);
     doc[fn]('pointerup', onPointerUp, passive);
@@ -350,6 +465,7 @@
     window[fn]('wheel', onScroll, passive);
     window[fn]('blur', onBlur);
     window[fn]('pagehide', onPageHide);
+    window[fn]('softnav:done', onSoftNavDone);
   }
 
   /* ---------- Enable / disable (media queries) ---------- */

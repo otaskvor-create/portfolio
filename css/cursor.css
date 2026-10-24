@@ -1,20 +1,26 @@
 /* ============================================
    ADAPTIVE CURSOR  (behaviour lives in js/cursor.js)
 
-   White shape + mix-blend-mode: difference means the cursor inverts
-   whatever is under it: near-black on the warm paper background,
-   light on dark images, the lightbox and the Seyfor theme previews.
-   One rule works across every theme, no per-theme colours needed.
+   Black dot (also enlarged into the link ring and the drag / zoom pill);
+   only the text caret is blue, like the Motion+ Cursor example.
+   No mix-blend-mode: it forced the browser to re-blend the whole page on
+   every frame and made the cursor stutter. Over dark content (dark images,
+   the lightbox, dark sections) js/cursor.js sets data-theme="light" and the
+   dot / ring / pills turn white instead.
+   Colours live in the variables on .site-cursor.
    ============================================ */
 .site-cursor {
+  --cursor-dot: #0f0f0f;                       /* default dot */
+  --cursor-blue: #1E75F7;                      /* text caret only */
+  --cursor-outline: transparent;
+  --cursor-ring-fill: rgba(15, 15, 15, 0.14);  /* link ring fill */
   position: fixed;
   top: 0;
   left: 0;
   z-index: 2147483647;
   pointer-events: none;
   user-select: none;
-  color: #000;                      /* glyph colour: a cut-out in the white shape */
-  mix-blend-mode: difference;
+  color: #fff;                      /* glyph colour inside the dark pill */
   opacity: 0;
   transition: opacity var(--t-med, 0.28s) ease;
   will-change: transform;
@@ -31,7 +37,8 @@
   height: 12px;
   border: 1.5px solid transparent;
   border-radius: 6px;
-  background: #fff;
+  background: var(--cursor-dot);
+  box-shadow: 0 0 0 1px var(--cursor-outline);
   transform: translate(-50%, -50%) scale(var(--s));
   transition:
     width 0.32s var(--ease, cubic-bezier(0.16, 1, 0.3, 1)),
@@ -54,16 +61,18 @@
   width: 40px;
   height: 40px;
   border-radius: 22px;
-  border-color: #fff;
-  background: rgba(255, 255, 255, 0.14);
+  border-color: var(--cursor-dot);
+  background: var(--cursor-ring-fill);
 }
 
 /* ---------- Text: caret that matches the hovered text size ---------- */
 .site-cursor[data-state="text"] .site-cursor__shape {
-  width: 3px;
+  width: 4px;
   height: var(--caret-h, 20px);
   border-width: 0;
   border-radius: 2px;
+  background: var(--cursor-blue);
+  box-shadow: none;
 }
 /* no shrinking while selecting text */
 .site-cursor[data-state="text"].is-pressed .site-cursor__shape { --s: 1; }
@@ -84,6 +93,13 @@
 
 /* ---------- Disabled ---------- */
 .site-cursor[data-state="disabled"] .site-cursor__shape { opacity: 0.35; }
+
+/* ---------- Light variant: shown over dark content ---------- */
+.site-cursor[data-theme="light"] {
+  --cursor-dot: #fff;
+  --cursor-ring-fill: rgba(255, 255, 255, 0.18);
+  color: #0f0f0f;                   /* glyph colour inside the white pill */
+}
 
 /* ---------- Hidden by data-cursor="hide" ---------- */
 .site-cursor[data-state="hide"] .site-cursor__shape { --s: 0; }
