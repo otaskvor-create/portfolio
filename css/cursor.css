@@ -1,20 +1,21 @@
 /* ============================================
    ADAPTIVE CURSOR  (behaviour lives in js/cursor.js)
 
-   White shape + mix-blend-mode: difference means the cursor inverts
-   whatever is under it: near-black on the warm paper background,
-   light on dark images, the lightbox and the Seyfor theme previews.
-   One rule works across every theme, no per-theme colours needed.
+   Solid-colour shape with a thin light outline (no mix-blend-mode: it made
+   Chrome re-blend the whole page every frame). The outline keeps the
+   cursor visible on dark images, the lightbox and the Seyfor previews.
+   Change the colour in one place: --cursor-color.
    ============================================ */
 .site-cursor {
+  --cursor-color: #0f0f0f;
+  --cursor-outline: rgba(255, 255, 255, 0.85);
   position: fixed;
   top: 0;
   left: 0;
   z-index: 2147483647;
   pointer-events: none;
   user-select: none;
-  color: #000;                      /* glyph colour: a cut-out in the white shape */
-  mix-blend-mode: difference;
+  color: #fff;                      /* glyph colour inside the shape */
   opacity: 0;
   transition: opacity var(--t-med, 0.28s) ease;
   will-change: transform;
@@ -31,7 +32,8 @@
   height: 12px;
   border: 1.5px solid transparent;
   border-radius: 6px;
-  background: #fff;
+  background: var(--cursor-color);
+  box-shadow: 0 0 0 1px var(--cursor-outline);
   transform: translate(-50%, -50%) scale(var(--s));
   transition:
     width 0.32s var(--ease, cubic-bezier(0.16, 1, 0.3, 1)),
@@ -54,8 +56,8 @@
   width: 40px;
   height: 40px;
   border-radius: 22px;
-  border-color: #fff;
-  background: rgba(255, 255, 255, 0.14);
+  border-color: var(--cursor-color);
+  background: color-mix(in srgb, var(--cursor-color) 14%, transparent);
 }
 
 /* ---------- Text: caret that matches the hovered text size ---------- */
