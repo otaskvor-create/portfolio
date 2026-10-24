@@ -1,4 +1,3 @@
-
 /* ============================================
    SIDEBAR — MOBILE TOGGLE
    ============================================ */
@@ -106,32 +105,49 @@ if (window.matchMedia('(hover: hover) and (pointer: fine) and (min-width: 901px)
   gridOverlay.style.cssText = 'position:fixed;top:0;right:0;bottom:0;left:var(--nav-w);pointer-events:none;z-index:1;overflow:hidden;';
   document.body.appendChild(gridOverlay);
 
+  // Same look as before (42px grid revealed in a 150px radius around the
+  // pointer), but built so the browser never repaints while the mouse moves:
+  //  - the spot has a STATIC radial mask and is only moved with transform
+  //  - the grid inside it is moved the opposite way (modulo the 42px period),
+  //    so the lines stay locked to the page while the spot slides over them
+  const GRID = 42, R = 150, SIZE = R * 2;
+
   const gridMask = document.createElement('div');
   gridMask.id = 'cursor-grid-mask';
   gridMask.style.cssText = [
-    'position:absolute;inset:0',
-    'background-image:linear-gradient(rgba(15,15,15,0.07) 1px,transparent 1px),linear-gradient(90deg,rgba(15,15,15,0.07) 1px,transparent 1px)',
-    'background-size:42px 42px',
+    'position:absolute;top:0;left:0;width:' + SIZE + 'px;height:' + SIZE + 'px',
+    'overflow:hidden',
     'opacity:0',
     'transition:opacity 0.45s ease',
-    '-webkit-mask-image:radial-gradient(circle 150px at -999px -999px,black 0%,transparent 100%)',
-    'mask-image:radial-gradient(circle 150px at -999px -999px,black 0%,transparent 100%)',
+    'will-change:transform,opacity',
+    '-webkit-mask-image:radial-gradient(circle ' + R + 'px at ' + R + 'px ' + R + 'px,black 0%,transparent 100%)',
+    'mask-image:radial-gradient(circle ' + R + 'px at ' + R + 'px ' + R + 'px,black 0%,transparent 100%)',
   ].join(';');
   gridOverlay.appendChild(gridMask);
 
+  const gridLines = document.createElement('div');
+  gridLines.style.cssText = [
+    'position:absolute;top:0;left:0;width:' + (SIZE + GRID) + 'px;height:' + (SIZE + GRID) + 'px',
+    'background-image:linear-gradient(rgba(15,15,15,0.07) 1px,transparent 1px),linear-gradient(90deg,rgba(15,15,15,0.07) 1px,transparent 1px)',
+    'background-size:' + GRID + 'px ' + GRID + 'px',
+    'will-change:transform',
+  ].join(';');
+  gridMask.appendChild(gridLines);
+
   let lastX = -999, lastY = -999, raf = null;
   const navW = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--nav-w')) || 210;
+  const mod = (n, m) => ((n % m) + m) % m;
 
   document.addEventListener('mousemove', e => {
     lastX = e.clientX;
     lastY = e.clientY;
     if (!raf) {
       raf = requestAnimationFrame(() => {
-        // Adjust x relative to where the overlay starts
-        const adjustedX = lastX - navW;
-        const v = `radial-gradient(circle 150px at ${adjustedX}px ${lastY}px,black 0%,transparent 100%)`;
-        gridMask.style.webkitMaskImage = v;
-        gridMask.style.maskImage = v;
+        // Spot origin, relative to where the overlay starts (integers keep the 1px lines crisp)
+        const sx = Math.round(lastX - navW - R);
+        const sy = Math.round(lastY - R);
+        gridMask.style.transform = 'translate3d(' + sx + 'px,' + sy + 'px,0)';
+        gridLines.style.transform = 'translate3d(' + (-mod(sx, GRID)) + 'px,' + (-mod(sy, GRID)) + 'px,0)';
         gridMask.style.opacity = '1';
         raf = null;
       });
